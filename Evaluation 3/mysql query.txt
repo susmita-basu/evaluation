@@ -1,0 +1,122 @@
+Create a tree structure in MySql table that could store the following tree structure:
+http://prnt.sc/wcbzth 
+
+CREATE TABLE category (
+  id int(200) unsigned NOT NULL AUTO_INCREMENT,
+  title varchar(50) NOT NULL,
+  parent_id int(200) unsigned DEFAULT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (parent_id) REFERENCES category (id) 
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO category(title,parent_id)  VALUES('Electronics',NULL);
+
+INSERT INTO category(title,parent_id) VALUES('Laptops & PC',1);
+
+INSERT INTO category(title,parent_id) VALUES('Laptops',2);
+
+INSERT INTO category(title,parent_id) VALUES('PC',2);
+
+INSERT INTO category(title,parent_id) VALUES('Cameras & photo',1);
+
+INSERT INTO category(title,parent_id) VALUES('Camera',5);
+
+INSERT INTO category(title,parent_id) VALUES('Phones & Accessories',1);
+
+INSERT INTO category(title,parent_id) VALUES('Smartphones',7);
+
+INSERT INTO category(title,parent_id) VALUES('Android',8);
+
+INSERT INTO category(title,parent_id) VALUES('iOS',8);
+
+INSERT INTO category(title,parent_id) VALUES('Other Smartphones',8);
+
+INSERT INTO category(title,parent_id) VALUES('Batteries',7);
+
+INSERT INTO category(title,parent_id) VALUES('Headsets',7);
+
+INSERT INTO category(title,parent_id) VALUES('Screen Protectors',7);
+
+
+
+
+
+
+
+
+
+1) Write a query to find the root node.
+
+
+SELECT id, title FROM category WHERE parent_id IS NULL;
+
+
+
+2) Write a query to find leaf node.
+
+
+
+SELECT c1.id, c1.title FROM category c1 LEFT JOIN category c2 ON c2.parent_id = c1.id WHERE c2.id IS NULL;
+
+
+
+3) Write a query to find non-leaf node.
+
+
+
+SELECT DISTINCT( c1.id), c1.title FROM category c1 INNER JOIN category c2 ON c2.parent_id = c1.id WHERE c2.id IS NOT NULL
+
+
+
+
+4) Write a query to find the path of each node. e.g. http://prnt.sc/wcc4bg
+
+
+
+WITH RECURSIVE category_path (id, title, path) AS
+(
+  SELECT id, title, title as path FROM category WHERE parent_id IS NULL
+  UNION ALL
+  SELECT c.id, c.title, CONCAT(cp.path, ' > ', c.title) FROM category_path AS cp JOIN category AS c ON cp.id = c.parent_id
+)
+SELECT * FROM category_path
+ORDER BY path;
+
+
+
+5) Write a function to calculate node level. e.g. Electronics is at 0 level, Camera is on level 2 and iOs is on level 3.
+
+
+
+WITH RECURSIVE category_path (id, title, level) AS ( 
+    SELECT id, title, 0 level FROM category WHERE parent_id IS NULL 
+    UNION ALL 
+    SELECT c.id, c.title,cp.level + 1 FROM category_path AS cp JOIN category AS c ON cp.id = c.parent_id 
+) 
+SELECT * FROM category_path ORDER BY level
+
+
+
+
+
+6) Write a procedure to get the immediate children.
+
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `imchild`(IN `uid` INT) NOT DETERMINISTIC NO SQL SQL SECURITY DEFINER SELECT
+    id, title
+FROM
+    category
+WHERE
+    parent_id = uid
+
+
+SET @p0='7'; CALL `imchild`(@p0);
+
+
+
+
+
+
+
+
